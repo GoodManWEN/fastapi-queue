@@ -34,7 +34,7 @@ This module is for people who want to use task queues but don't want to start to
 
 ## Response sequence description
 
-(image)
+![](https://raw.githubusercontent.com/goodmanwen/fastapi-queue/main/misc/Schematic.png)
 
 ## Examples
 
@@ -92,6 +92,7 @@ async def sync_test(request: Request, x: int):
 
 @app.get('/async-test')
 async def async_test(request: Request, n: int):
+    n = min(n, 80)
     success_status: bool = False
     async with DistributedTaskApplyManager(
         redis = redis, 

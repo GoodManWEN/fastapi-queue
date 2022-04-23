@@ -92,6 +92,7 @@ async def sync_test(request: Request, x: int):
 
 @app.get('/async-test')
 async def async_test(request: Request, n: int):
+    n = min(n, 80)
     success_status: bool = False
     async with DistributedTaskApplyManager(
         redis = redis, 

@@ -232,7 +232,13 @@ async def startup():
 @RateLimiter(bucket = 5000, limits_s = 1000)
 async def root(request: Request):  
     '''
-    The two parameters of RateLimiter mean that this particular FastAPI instance holds a total of 5000 tokens and takes one token each time a request is received. If there is a large influx of requests come in a short period of time, when the number of remaining tokens in the bucket decreases to 0, the server will simply reject all requests without forwarding them to the queue-worker. With current parameters, this bucket now keeps a maximum of 5000 tokens and restores 1000 tokens per second.
+    The two parameters of RateLimiter mean that this particular FastAPI instance 
+    holds a total of 5000 tokens and takes one token each time a request is received. 
+    If there is a large influx of requests come in a short period of time, when 
+    the number of remaining tokens in the bucket decreases to 0, the server will 
+    simply reject all requests without forwarding them to the queue-worker. With 
+    current parameters, this bucket now keeps a maximum of 5000 tokens and restores 
+    1000 tokens per second.
     '''
     async with DistributedTaskApplyManager(
         ...

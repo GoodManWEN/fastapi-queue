@@ -6,7 +6,7 @@ import aioredis
 import msgpack as json
 from async_timeout import timeout
 from typing import Optional
-try
+try:
     from typing import Literal
 except:
     from typing_extensions import Literal

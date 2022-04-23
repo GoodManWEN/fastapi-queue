@@ -26,7 +26,7 @@ class QueueWorker:
         route_table_maximum_concurrency: dict = None,
         allowed_type_limit: Optional[int] = None, 
         run_startup: bool = False,
-        logger: None,
+        logger = None,
     ):
         '''
         Use task levels to mark how much time a task may consume, so that some nodes may only process low time consuming tasks to avoid a scenario where a large number of long time consuming tasks in the queue take up all the resources.

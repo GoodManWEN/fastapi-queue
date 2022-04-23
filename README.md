@@ -203,9 +203,9 @@ if __name__ == '__main__':
 
 Due to the fully asynchronous support, complex interprocedural calls exhibit a very low processing latency.
 
-(Latency vs. number of request threads)
+(Latency vs. number of request threads on going)
 
-(Maximum capability requests per second vs. number of service nodes)
+(Maximum capability requests per second vs. number of service nodes on going)
 
 ## Tips
 

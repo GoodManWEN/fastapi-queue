@@ -70,7 +70,8 @@ async def root(request: Request):
         redis = redis, 
         request_path = request.url.path,
     ) as dtmanager:
-        if not dtmanager.success(): # Exceed the maximum capacity of the back-end queue, return 503 directly.
+        if not dtmanager.success(): 
+            # Exceed the maximum capacity of the back-end queue, return 503 directly.
             return JSONResponse(status_code=503, content="Service Temporarily Unavailable")
         success_status, result = await dtmanager.rclt(form_data = {}, task_level = 0)
     return get_response(success_status)

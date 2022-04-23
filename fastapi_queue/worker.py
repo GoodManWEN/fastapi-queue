@@ -167,11 +167,16 @@ class QueueWorker:
                     await self.redis.publish(result_channel_name, self._confirm_token)
                     self._logger.debug(f"Pid: {self.pid}, `{result_channel_name}` confirmed")
                     method = self._method_map[task_route]
-                    if method.__name__[0] == 'a':
-                        res = await method(self.redis, self.mysql, **form_data)
+                    try:
+                        if method.__name__[0] == 'a':
+                            res = await method(self.redis, self.mysql, **form_data)
+                        else:
+                            res = await loop.run_in_executor(self._executor, partial(method, self.redis, self.mysql, **form_data))
+                    except Exception as e:
+                        res = json.dumps([False, f'{type(e)}:{e}'])
                     else:
-                        res = await loop.run_in_executor(self._executor, partial(method, self.redis, self.mysql, **form_data))
-                    res = json.dumps(res)
+                        # format: [run_success: bool, result: Any]
+                        res = json.dumps([True, res])
                     self._logger.info(f"Pid: {self.pid}, return: {res[:20]}")
                     await self.redis.publish(result_channel_name, res)
 

@@ -126,6 +126,8 @@ async def async_root(*args):
 
 def sync_prime_number(redis, mysql, x):
     # Example synchronous function to determine if the input x is a prime number.
+    # redis and mysql clients are entered by default, starting from the third parameter 
+    # is your custom parameters, only keyword parameters are supported. 
     import math, time
     if x == 1:
         return True
@@ -137,6 +139,12 @@ def sync_prime_number(redis, mysql, x):
 
 async def async_fibonacci(redis, mysql, n):
     # Example asynchronous function to calculate the nth position of the Fibonacci series.
+    # redis and mysql clients are entered by default, starting from the third parameter 
+    # is your custom parameters, only keyword parameters are supported.
+
+    # Be sure to note that all data to upload and download must be serializable by msgpack.
+    # This means that if you transfer some custom object, or in this case a very large integer, 
+    # the request will be responsed with an internal server error (http 500).
     a, b = 0, 1
     for _ in range(n):
         a, b = b, a + b 

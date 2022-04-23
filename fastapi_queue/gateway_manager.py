@@ -52,6 +52,8 @@ class DistributedTaskApplyManager:
                         if message['data'] == self._confirm_token:
                             task_status_activate = True
                             break
+                        else:
+                            raise RuntimeError('This is special class to account for confirmation failures')
         except asyncio.TimeoutError:
             asyncio.create_task(self._withdraw_query(*args, **kwargs))
         except Exception as e:
@@ -66,15 +68,17 @@ class DistributedTaskApplyManager:
                 while True:
                     message = await channel.get_message(ignore_subscribe_messages=True, timeout = self._process_timeout + 5)
                     if message is not None:
-                        result = json.loads(message['data'])
+                        run_success, result = json.loads(message['data'])
                         break
         except asyncio.TimeoutError:
             return False, -2
         except Exception as e:
             if debug:
                 raise e
+            return False, e
         else:
-            return True, result 
+            if run_success: return True, result 
+            else: return False, result
 
     async def _publish_query(self, form_data: dict = {}, task_level: int = 0):
         '''

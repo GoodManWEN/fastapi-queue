@@ -210,7 +210,7 @@ Due to the fully asynchronous support, complex interprocedural calls exhibit a v
 ## Tips
 
 - The code has been carefully debugged and functions reliably, but I haven't spent much time making it a generic module, which means that if you encounter bugs you'll need to modify the code yourself, and they're usually caused by oversights of detail somewhere.
-- The service has undergone rigorous stress tests and can work for hours under concurrent requests from hundreds of clients, but for reliability of protection, you need to carefully set the upper limit of your load. Where RateLimiter can provide you with a low consumption roughly pre-intercepted function.
+- The service has undergone rigorous stress tests and can work for hours under concurrent requests from hundreds of clients, but for reliability of protection, you need to carefully set the upper limit of your load. Where `RateLimiter` can provide you with a low consumption **roughly** pre-intercepted function.
 
 For example,
 ```python

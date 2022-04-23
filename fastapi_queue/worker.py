@@ -16,6 +16,7 @@ except:
     ...
 
 maximum_subthread = min(256, os.cpu_count() * 16)
+debug = False
 
 class QueueWorker:
 
@@ -142,6 +143,7 @@ class QueueWorker:
 
 
     async def _worker_thread(self, thread_idx: int):
+        loop = asyncio.get_running_loop()
         while True:
             info = await self._worker_thread_futs[thread_idx]
             self._logger.debug(f"Pid: {self.pid}, thread no.{thread_idx} waked up，task info: {info}.")

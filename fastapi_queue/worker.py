@@ -5,7 +5,11 @@ import asyncio
 import aioredis
 import msgpack as json
 from async_timeout import timeout
-from typing import Literal, Optional
+from typing import Optional
+try
+    from typing import Literal
+except:
+    from typing_extensions import Literal
 from functools import partial
 from ThreadPoolExecutorPlus import ThreadPoolExecutor
 from .utils import PseudoThreadPoolExecutor

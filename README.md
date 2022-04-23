@@ -162,6 +162,7 @@ async def main(logger):
                 route_table_maximum_concurrency = route_table_maximum_concurrency, 
                 allowed_type_limit=None, 
                 run_startup=run_startup,
+                logger=logger,
             )
             process_worker = worker
             [worker.method_register(name, func) for name, func in route_table.items()]

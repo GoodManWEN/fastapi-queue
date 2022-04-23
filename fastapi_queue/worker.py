@@ -26,6 +26,7 @@ class QueueWorker:
         route_table_maximum_concurrency: dict = None,
         allowed_type_limit: Optional[int] = None, 
         run_startup: bool = False,
+        self._logger: None,
     ):
         '''
         Use task levels to mark how much time a task may consume, so that some nodes may only process low time consuming tasks to avoid a scenario where a large number of long time consuming tasks in the queue take up all the resources.
@@ -54,6 +55,7 @@ class QueueWorker:
         self._closing = False
         self._has_synchronou_process = False
         self._close_flag_lst = {'main':0, 'close':0, "ltrigger":0}
+        self._logger = logger
         self._close_flag = asyncio.Future()
         self.pid = os.getpid()
         self.startup()
@@ -106,14 +108,14 @@ class QueueWorker:
 
     async def _waiting_new_query(self, channel: aioredis.client.PubSub):
         while True:
-            logger.debug(f"Pid: {self.pid}, blocking and waiting to listen.")
+            self._logger.debug(f"Pid: {self.pid}, blocking and waiting to listen.")
             await self._start_listen_fut
             try:
-                logger.debug(f"Pid: {self.pid}, start listening and hang up the program.")
+                self._logger.debug(f"Pid: {self.pid}, start listening and hang up the program.")
                 message = await channel.get_message(ignore_subscribe_messages=True, timeout=3600)
-                logger.debug(f"Pid: {self.pid}, take out message: {message}.")
+                self._logger.debug(f"Pid: {self.pid}, take out message: {message}.")
                 if message is not None:
-                    logger.debug(f"Pid: {self.pid}, current subthread occupancy status: {self._fully_occupied}:{self._thread_ready_status}.")
+                    self._logger.debug(f"Pid: {self.pid}, current subthread occupancy status: {self._fully_occupied}:{self._thread_ready_status}.")
                     if not self._fully_occupied:
                         if self._closing:
                             for idx in range(self._thread_num):
@@ -142,7 +144,7 @@ class QueueWorker:
     async def _worker_thread(self, thread_idx: int):
         while True:
             info = await self._worker_thread_futs[thread_idx]
-            logger.debug(f"Pid: {self.pid}, thread no.{thread_idx} waked up，task info: {info}.")
+            self._logger.debug(f"Pid: {self.pid}, thread no.{thread_idx} waked up，task info: {info}.")
             if info is False: return # Receive False to close this subthread
             while True:
                 # After being activated, it transitions from sleep state to working state. Loop until the task queue is empty.
@@ -154,24 +156,24 @@ class QueueWorker:
 
                     if task_bytes is None: break
                     task_level, task_route, task_uuid, form_data = self._query_string_parser(task_bytes)
-                    logger.info(f"Pid: {self.pid}, new task: {task_level}, '{task_route}', {task_uuid}")
+                    self._logger.info(f"Pid: {self.pid}, new task: {task_level}, '{task_route}', {task_uuid}")
                     result_channel_name = f"{self._result_channel_prefix}{task_uuid}"
                     await self.redis.publish(result_channel_name, self._confirm_token)
-                    logger.debug(f"Pid: {self.pid}, `{result_channel_name}` confirmed")
+                    self._logger.debug(f"Pid: {self.pid}, `{result_channel_name}` confirmed")
                     method = self._method_map[task_route]
                     if method.__name__[0] == 'a':
                         res = await method(self.redis, self.mysql, **form_data)
                     else:
                         res = await loop.run_in_executor(self._executor, partial(method, self.redis, self.mysql, **form_data))
                     res = json.dumps(res)
-                    logger.info(f"Pid: {self.pid}, return: {res[:20]}")
+                    self._logger.info(f"Pid: {self.pid}, return: {res[:20]}")
                     await self.redis.publish(result_channel_name, res)
 
                 except Exception as e:
                     if debug:
                         raise e
             
-            logger.debug(f"Pid: {self.pid}, thread no.{thread_idx}, end of task cycle.")
+            self._logger.debug(f"Pid: {self.pid}, thread no.{thread_idx}, end of task cycle.")
             self._worker_thread_futs[thread_idx] = asyncio.Future()
             self._thread_ready_status[thread_idx] = 1
             self._fully_occupied = False
@@ -185,7 +187,7 @@ class QueueWorker:
     async def run_serve(self):
         if self._run_startup:
             await self.async_startup()
-        logger.info(f"Startup comlete, pid: {self.pid}.")
+        self._logger.info(f"Startup comlete, pid: {self.pid}.")
         pubsub = self.redis.pubsub() 
         self._start_listen_fut = asyncio.Future()
         self._start_listen_fut.set_result(None)
@@ -239,8 +241,8 @@ class QueueWorker:
         if sum(self._close_flag_lst.values()) ==3:
             self._close_flag.set_result(None)
 
-    def graceful_shutdown(self, sig: int, frame: 'frame'):
-        logger.info(f"Pid: {self.pid}, catch sig: {sig}")
+    def graceful_shutdown(self, sig: int, frame):
+        self._logger.info(f"Pid: {self.pid}, catch sig: {sig}")
         self._closing = True
         loop = asyncio.get_running_loop()
         loop.create_task(self.close())

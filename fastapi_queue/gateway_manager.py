@@ -100,7 +100,7 @@ class DistributedTaskApplyManager:
         success: bool = bool(success)
         self._success = success
         if success:
-            self._pubsub = redis.pubsub()
+            self._pubsub = self.redis.pubsub()
             entered = False
             try:
                 self._ps_channel = await self._pubsub.__aenter__()

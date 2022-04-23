@@ -39,7 +39,7 @@ class DistributedTaskApplyManager:
     def success(self):
         return self._success
 
-    async def redis_channel_listening_result(self, channel: aioredis.client.PubSub, *args, **kwargs):
+    async def redis_channel_listening_result(self, *args, **kwargs):
         asyncio.create_task(self._publish_query(*args, **kwargs))
         task_status_activate = False 
         channel = self._ps_channel

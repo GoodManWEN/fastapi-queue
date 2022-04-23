@@ -47,14 +47,15 @@ request, but no need to handle the exact request logic.
 from typing import Optional, Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from test2 import DistributedTaskApplyManager
+from fastapi_queue import DistributedTaskApplyManager
+import aioredis
 
 
 app = FastAPI()
 redis = aioredis.Redis.from_url("redis://localhost")
 
 
-def get_response(success_status: bool, result: Any) -> JSONResponse:
+def get_response(success_status: bool, result: Any) -> JSONResponse | dict:
     if success_status:
         return {"status": 200, "data": result}
     if result == -1:
@@ -63,7 +64,7 @@ def get_response(success_status: bool, result: Any) -> JSONResponse:
         return JSONResponse(status_code=500, content="Internal Server Error")
 
 
-@app.get('/'):
+@app.get('/')
 async def root(request: Request):
     success_status: bool = False
     async with DistributedTaskApplyManager(
@@ -74,11 +75,11 @@ async def root(request: Request):
             # Exceed the maximum capacity of the back-end queue, return 503 directly.
             return JSONResponse(status_code=503, content="Service Temporarily Unavailable")
         success_status, result = await dtmanager.rclt(form_data = {}, task_level = 0)
-    return get_response(success_status)
+    return get_response(success_status, result)
 
 
-@app.get('/sync-test'):
-async def root(request: Request, x: int):
+@app.get('/sync-test')
+async def sync_test(request: Request, x: int):
     success_status: bool = False
     async with DistributedTaskApplyManager(
         redis = redis, 
@@ -87,10 +88,10 @@ async def root(request: Request, x: int):
         if not dtmanager.success():
             return JSONResponse(status_code=503, content="Service Temporarily Unavailable")
         success_status, result = await dtmanager.rclt(form_data = {'x': x}, task_level = 0)
-    return get_response(success_status)
+    return get_response(success_status, result)
 
-@app.get('/async-test'):
-async def root(request: Request, n: int):
+@app.get('/async-test')
+async def async_test(request: Request, n: int):
     success_status: bool = False
     async with DistributedTaskApplyManager(
         redis = redis, 
@@ -99,7 +100,7 @@ async def root(request: Request, n: int):
         if not dtmanager.success():
             return JSONResponse(status_code=503, content="Service Temporarily Unavailable")
         success_status, result = await dtmanager.rclt(form_data = {'n': n}, task_level = 0)
-    return get_response(success_status)
+    return get_response(success_status, result)
 ```
 
 Service nodes
@@ -109,9 +110,13 @@ The following code will create a pool of workers of 4 processes with 4 threads u
 each process. They rely on redis for synchronization, so you can run other instances 
 as you like without worrying about creating conflicts.
 '''
-
 from fastapi_queue import QueueWorker
+from loguru import logger
 import asyncio  
+import aioredis
+import signal 
+import sys 
+import os 
 
 queueworker = None
 
@@ -149,12 +154,12 @@ route_table_maximum_concurrency = {
     '/async-test': 1000,
 }
 
-async def main(logger):
+async def main(pid, logger):
     global queueworker
 
     first_time_run = True
     while True:
-        run_startup, first_time_run = (True if main_process else False) and first_time_run, False
+        run_startup, first_time_run = (True if pid != 0 else False) and first_time_run, False
         redis = aioredis.Redis.from_url("redis://localhost")
         try:
             worker = QueueWorker(
@@ -165,7 +170,7 @@ async def main(logger):
                 run_startup=run_startup,
                 logger=logger,
             )
-            process_worker = worker
+            queueworker = worker
             [worker.method_register(name, func) for name, func in route_table.items()]
             await worker.run_serve()
             if worker.closeing():
@@ -177,6 +182,12 @@ async def main(logger):
     await redis.close()
     logger.info(f"Pid: {worker.pid}, shutdown")
 
+
+def sigint_capture(sig, frame):
+    if queueworker: queueworker.graceful_shutdown(sig, frame)
+    else: sys.exit(1)
+
+
 if __name__ == '__main__':
     logger.remove()
     logger.add(sys.stderr, level="DEBUG", enqueue=True)
@@ -184,7 +195,7 @@ if __name__ == '__main__':
     for _ in range(3):
         pid = os.fork()
         if pid == 0: break
-    asyncio.run(main(logger))
+    asyncio.run(main(pid, logger))
 ```
 
 ## Performance

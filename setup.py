@@ -86,5 +86,5 @@ setup(
         'Framework :: AsyncIO',
     ],
     python_requires='>=3.7',
-    keywords=["fastapi-queue" ,]
+    keywords=["fastapi-queue" , "fastapi", "queue"]
 )

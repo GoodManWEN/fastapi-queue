@@ -41,7 +41,8 @@ This module is for people who want to use task queues but don't want to start to
 Gateway
 ```python
 '''
-A gateway application made with FastAPI, which only handles whether or not to allow the request, but no need to handle the exact request logic.
+A gateway application made with FastAPI, which only handles whether or not to allow the 
+request, but no need to handle the exact request logic.
 '''
 from typing import Optional, Any
 from fastapi import FastAPI, Request
@@ -103,7 +104,9 @@ async def root(request: Request, n: int):
 Service nodes
 ```python
 '''
-The following code will create a pool of workers of 4 processes with 4 threads under each process. They rely on redis for synchronization, so you can run other instances as you like without worrying about creating conflicts.
+The following code will create a pool of workers of 4 processes with 4 threads under 
+each process. They rely on redis for synchronization, so you can run other instances 
+as you like without worrying about creating conflicts.
 '''
 
 from fastapi_queue import QueueWorker

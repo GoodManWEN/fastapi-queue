@@ -8,6 +8,8 @@
 
 A python implementation of a task queue based on `Redis` that can serve as a peak shaver and protect your app.
 
+[中文文档](https://github.com/GoodManWEN/fastapi-queue/tree/main/misc/readme_ch.md)
+
 ## What is fastapi-queue?
 Fastapi-queue provides a high-performance redis-based task queue that allows requests sent by clients to the `FastAPI` server to be cached in the queue for delayed execution. This means that you don't have to worry about overwhelming your back-end data service, nor do you have to worry about requests being immediately rejected due to exceeding the load limit, when there is an influx of requests to your app in a very short period of time.
 

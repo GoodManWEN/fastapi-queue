@@ -14,7 +14,7 @@ A python implementation of a task queue based on `Redis` that can serve as a pea
 Fastapi-queue provides a high-performance redis-based task queue that allows requests sent by clients to the `FastAPI` server to be cached in the queue for delayed execution. This means that you don't have to worry about overwhelming your back-end data service, nor do you have to worry about requests being immediately rejected due to exceeding the load limit, when there is an influx of requests to your app in a very short period of time.
 
 ## Why fastapi-queue?
-This module is for people who want to use task queues but don't want to start too many dependencies to prevent increased maintenance costs. For example if you want to enjoy the benefits of queues but want to maintain a lightweight application and don't want to install `RabbitMQ`, then fastapi-queue is your choice, you just need to rely on python runtime and `Redis` environment.
+This module is for people who want to use task queues but don't want to start too many dependencies to prevent increased maintenance costs. For example if you want to enjoy the benefits of queues but want to maintain a lightweight application and don't want to install `Celery` & `RabbitMQ`, then fastapi-queue is your choice, you just need to rely on python runtime and `Redis` environment.
 
 ## Feature
 - Separate gateway and service nodes.
